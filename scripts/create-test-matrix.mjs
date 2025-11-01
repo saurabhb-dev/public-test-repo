@@ -1,8 +1,10 @@
-// The "attacker's" version of the script
+// The "good" script in your main branch
 const matrix = {
   app: [
-    // The payload: 'nitro' (to make the cd work), ';', 'whoami'
-    { name: 'nitro; whoami', project: 'whatever' },
+    {
+      name: 'nitro',
+      project: 'workbench-nitro-workflow',
+    },
   ],
 };
 console.log(JSON.stringify(matrix));
