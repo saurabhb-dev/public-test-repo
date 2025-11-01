@@ -1,10 +1,8 @@
 name: Tests
-
 on:
   pull_request:
 
 jobs:
-  # JOB 1: RUNS UNTRUSTED CODE FROM THE PR
   getTestMatrix:
     name: Get Test Matrix (Runs Untrusted Code)
     runs-on: ubuntu-latest
@@ -13,23 +11,21 @@ jobs:
     steps:
       - name: Checkout PR code
         uses: actions/checkout@v4
-      
-      - name: Run PR script to get matrix
+      - name: Run PR script
         id: set-matrix
         run: echo "matrix=$(node ./scripts/create-test-matrix.mjs)" >> $GITHUB_OUTPUT
 
-  # JOB 2: CONSUMES THE UNTRUSTED OUTPUT
   e2e-vulnerable-job:
     name: Vulnerable Job
     runs-on: ubuntu-latest
-    needs: getTestMatrix # Depends on the untrusted output
+    needs: getTestMatrix
     strategy:
-      matrix: ${{ fromJson(needs.getTestMatrix.outputs.matrix) }} # Ingests the untrusted output
+      matrix: ${{ fromJson(needs.getTestMatrix.outputs.matrix) }}
     steps:
+      - name: Create dummy workbench
+        run: mkdir -p workbench/nitro
+
       - name: The Injected Step
-        # This step has NO "if" condition and directly uses the untrusted value,
-        # causing the command injection.
-        run: |
-          echo "Attempting to cd into workbench/${{ matrix.app.name }}"
-          cd workbench/${{ matrix.app.name }}
-          echo "Command finished."
+        # THIS IS THE VULNERABLE LINE
+        # The "&& echo '...'" forces the shell to parse the whole line
+        run: cd workbench/${{ matrix.app.name }} && echo 'This part runs after the cd'
